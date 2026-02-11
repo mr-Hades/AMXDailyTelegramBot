@@ -1,5 +1,7 @@
 """Repository pattern implementation for AMX API data access."""
 
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import requests
 
@@ -32,3 +34,60 @@ class AMXRepository:
         response.raise_for_status()
         data = response.json().get("data", [])
         return pd.DataFrame(data)
+
+    def get_instrument_detail(self, isin: str) -> Optional[Dict[str, Any]]:
+        """Fetch detailed instrument data including historical market data."""
+        url = f"{self.BASE_URL}/getInstrument/{isin}"
+        try:
+            response = requests.get(url, headers=self.HEADERS, timeout=self.TIMEOUT)
+            response.raise_for_status()
+            return response.json().get("data", {})
+        except requests.RequestException:
+            return None
+
+    def get_latest_market_data_for_instrument(self, isin: str) -> Optional[Dict[str, Any]]:
+        """
+        Get the most recent market data for a specific instrument.
+        Returns the latest entry from the instrument's market_data history.
+        """
+        detail = self.get_instrument_detail(isin)
+        if not detail:
+            return None
+
+        market_data = detail.get("market_data", [])
+        if not market_data:
+            return None
+
+        # Sort by order_date descending and return the latest
+        sorted_data = sorted(
+            market_data,
+            key=lambda x: x.get("order_date", ""),
+            reverse=True
+        )
+        return sorted_data[0] if sorted_data else None
+
+    def get_all_instruments_with_latest_data(
+        self, currency: str = "AMD"
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch all instruments for a currency with their latest market data.
+        This provides consistent bond counts by using instruments as the base.
+        """
+        instruments_df = self.get_instruments()
+        instruments_df = instruments_df.query(f"currency == '{currency}'")
+
+        results = []
+        for _, instrument in instruments_df.iterrows():
+            isin = instrument.get("isin")
+            if not isin:
+                continue
+
+            # Get latest market data for this instrument
+            latest_data = self.get_latest_market_data_for_instrument(isin)
+
+            results.append({
+                "instrument": instrument.to_dict(),
+                "latest_market_data": latest_data
+            })
+
+        return results

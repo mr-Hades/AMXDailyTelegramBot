@@ -56,6 +56,100 @@ class BondAnalyzer:
 
         return bonds
 
+    def analyze_all(self, currency: str = "AMD", show_progress: bool = True) -> List[Bond]:
+        """
+        Analyze ALL bonds for the given currency using historical data.
+        This provides consistent bond counts by fetching each instrument's latest data.
+
+        Note: This is slower as it makes one API call per bond, but ensures
+        all bonds are included regardless of daily market activity.
+
+        Args:
+            currency: Currency to filter by (default: AMD)
+            show_progress: Whether to print progress updates
+
+        Returns:
+            List of Bond objects sorted by Japanese yield (descending)
+        """
+        instruments_df = self.repository.get_instruments()
+        instruments_df = instruments_df.query(f"currency == '{currency}'")
+
+        total = len(instruments_df)
+        bonds = []
+
+        for idx, (_, instrument) in enumerate(instruments_df.iterrows(), 1):
+            isin = instrument.get("isin")
+            if not isin:
+                continue
+
+            if show_progress and idx % 10 == 0:
+                print(f"  Processing {idx}/{total} instruments...")
+
+            # Get latest market data for this instrument
+            latest_data = self.repository.get_latest_market_data_for_instrument(isin)
+
+            # Create bond from instrument + latest market data
+            bond = self._create_bond_from_instrument(instrument, latest_data)
+            if bond:
+                bonds.append(bond)
+
+        # Sort by Japanese yield (descending)
+        bonds.sort(key=lambda b: b.japanese_yield or 0, reverse=True)
+
+        return bonds
+
+    def _create_bond_from_instrument(
+        self, instrument: pd.Series, market_data: Optional[Dict]
+    ) -> Optional[Bond]:
+        """Create a Bond object from instrument data and optional market data."""
+        cpn_rate = self.coupon_parser.parse_rate(instrument.get("cpn_rate"))
+        par_value = self._parse_par_value(instrument.get("per_value"))
+
+        # Extract prices from market data if available
+        ask_price = None
+        bid_price = None
+        ask_yield = None
+
+        if market_data:
+            ask_price = self._safe_float(market_data.get("best_ask_price"))
+            bid_price = self._safe_float(market_data.get("best_bid_price"))
+            ask_yield = self._safe_float(market_data.get("best_ask_yield"))
+
+            # Fallback to avg/close prices if no bid/ask
+            if ask_price is None:
+                ask_price = self._safe_float(market_data.get("avg_price")) or \
+                           self._safe_float(market_data.get("close_price"))
+            if ask_yield is None:
+                ask_yield = self._safe_float(market_data.get("avg_yield")) or \
+                           self._safe_float(market_data.get("close_yield"))
+
+        bond = Bond(
+            ticker=instrument.get("ticker", ""),
+            isin=instrument.get("isin", ""),
+            maturity_date=instrument.get("maturity_date", ""),
+            short_name=instrument.get("short_name_en"),
+            ask_price=ask_price,
+            bid_price=bid_price,
+            ask_yield=ask_yield,
+            cpn_rate=cpn_rate,
+            cpn_frequency=instrument.get("cpn_frequency_en"),
+            par_value=par_value,
+        )
+
+        # Calculate Japanese yield
+        bond.japanese_yield = self.yield_calculator.calculate(bond)
+
+        return bond
+
+    def _safe_float(self, value: Any) -> Optional[float]:
+        """Safely convert value to float."""
+        if value is None or value == "" or value == "-":
+            return None
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return None
+
     def _create_bond(self, row: pd.Series, instruments_lookup: Dict) -> Optional[Bond]:
         """Create a Bond object from market data row."""
         isin = row.get("isin")

@@ -6,8 +6,10 @@ Fetches bond data from Armenian Stock Exchange (AMX), calculates Japanese Yield,
 and optionally sends reports to Telegram.
 
 Usage:
-    python main.py              # Console output only
+    python main.py              # Console output only (today's market data)
+    python main.py --all        # Include all bonds with historical data
     python main.py --telegram   # Also send to Telegram
+    python main.py --all --telegram  # All bonds + send to Telegram
 """
 
 import os
@@ -16,15 +18,20 @@ import sys
 from src import BondAnalyzer, BondReportFormatter, TelegramNotifier
 
 
-def main(send_telegram: bool = False) -> list:
+def main(send_telegram: bool = False, fetch_all: bool = False) -> list:
     """Main entry point."""
     # Initialize components
     analyzer = BondAnalyzer()
     formatter = BondReportFormatter()
 
     # Analyze AMD bonds
-    print("Fetching and analyzing AMD bonds...")
-    bonds = analyzer.analyze(currency="AMD")
+    if fetch_all:
+        print("Fetching ALL AMD bonds (using historical data)...")
+        print("This may take 1-2 minutes...\n")
+        bonds = analyzer.analyze_all(currency="AMD")
+    else:
+        print("Fetching AMD bonds with today's market data...")
+        bonds = analyzer.analyze(currency="AMD")
 
     # Console output
     print("\nMarket data with Japanese yields (sorted by highest yield):")
@@ -33,7 +40,9 @@ def main(send_telegram: bool = False) -> list:
     # Statistics
     total_bonds = len(bonds)
     bonds_with_yield = sum(1 for b in bonds if b.japanese_yield is not None)
+    bonds_with_price = sum(1 for b in bonds if b.ask_price is not None)
     print(f"\nTotal AMD bonds: {total_bonds}")
+    print(f"Bonds with price data: {bonds_with_price}")
     print(f"Bonds with Japanese yield: {bonds_with_yield}")
 
     # Send to Telegram if configured
@@ -56,4 +65,5 @@ def main(send_telegram: bool = False) -> list:
 
 if __name__ == "__main__":
     send_to_telegram = "--telegram" in sys.argv
-    main(send_telegram=send_to_telegram)
+    fetch_all_bonds = "--all" in sys.argv
+    main(send_telegram=send_to_telegram, fetch_all=fetch_all_bonds)
