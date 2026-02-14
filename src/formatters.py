@@ -11,12 +11,28 @@ from .models import Bond
 class BondReportFormatter:
     """Formats bond data for display/notification."""
 
-    @staticmethod
-    def format_for_telegram(bonds: List[Bond], top_n: int = 15) -> str:
+    # Currency display settings
+    CURRENCY_EMOJI = {
+        "AMD": "🇦🇲",
+        "USD": "🇺🇸",
+        "EUR": "🇪🇺",
+    }
+
+    @classmethod
+    def format_for_telegram(cls, bonds: List[Bond], currency: str = "AMD", top_n: int = 15) -> str:
         """Format top bonds as Telegram message."""
         today = datetime.now().strftime("%Y-%m-%d")
-        lines = [f"📊 <b>AMX Bond Yields Report</b>", f"📅 {today}\n"]
-        lines.append("<b>Top Bonds by Japanese Yield:</b>\n")
+        emoji = cls.CURRENCY_EMOJI.get(currency, "📊")
+        
+        # Create aggressive currency header
+        currency_line = f"{emoji}{emoji}{emoji} <b>【 {currency} 】</b> {emoji}{emoji}{emoji}"
+        
+        lines = [
+            currency_line,
+            f"<b>━━━━━ AMX Bond Yields Report ━━━━━</b>",
+            f"📅 {today}\n",
+        ]
+        lines.append(f"🏆 <b>Top {currency} Bonds by Japanese Yield:</b>\n")
         lines.append("<pre>")
         lines.append(f"{'Ticker':<8} {'Maturity':<12} {'Price':>7} {'Cpn%':>5} {'Yield%':>6}")
         lines.append("-" * 45)
@@ -29,7 +45,7 @@ class BondReportFormatter:
                     f"{bond.japanese_yield:>6.2f}"
                 )
         lines.append("</pre>")
-        lines.append(f"\n📈 Total AMD bonds analyzed: {len(bonds)}")
+        lines.append(f"\n📈 Total <b>{currency}</b> bonds analyzed: {len(bonds)}")
 
         return "\n".join(lines)
 

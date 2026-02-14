@@ -98,9 +98,7 @@ class BondAnalyzer:
 
         return bonds
 
-    def _create_bond_from_instrument(
-        self, instrument: pd.Series, market_data: Optional[Dict]
-    ) -> Optional[Bond]:
+    def _create_bond_from_instrument(self, instrument: pd.Series, market_data: Optional[Dict]) -> Optional[Bond]:
         """Create a Bond object from instrument data and optional market data."""
         cpn_rate = self.coupon_parser.parse_rate(instrument.get("cpn_rate"))
         par_value = self._parse_par_value(instrument.get("per_value"))
@@ -117,11 +115,13 @@ class BondAnalyzer:
 
             # Fallback to avg/close prices if no bid/ask
             if ask_price is None:
-                ask_price = self._safe_float(market_data.get("avg_price")) or \
-                           self._safe_float(market_data.get("close_price"))
+                ask_price = self._safe_float(market_data.get("avg_price")) or self._safe_float(
+                    market_data.get("close_price")
+                )
             if ask_yield is None:
-                ask_yield = self._safe_float(market_data.get("avg_yield")) or \
-                           self._safe_float(market_data.get("close_yield"))
+                ask_yield = self._safe_float(market_data.get("avg_yield")) or self._safe_float(
+                    market_data.get("close_yield")
+                )
 
         bond = Bond(
             ticker=instrument.get("ticker", ""),

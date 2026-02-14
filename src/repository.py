@@ -59,16 +59,10 @@ class AMXRepository:
             return None
 
         # Sort by order_date descending and return the latest
-        sorted_data = sorted(
-            market_data,
-            key=lambda x: x.get("order_date", ""),
-            reverse=True
-        )
+        sorted_data = sorted(market_data, key=lambda x: x.get("order_date", ""), reverse=True)
         return sorted_data[0] if sorted_data else None
 
-    def get_all_instruments_with_latest_data(
-        self, currency: str = "AMD"
-    ) -> List[Dict[str, Any]]:
+    def get_all_instruments_with_latest_data(self, currency: str = "AMD") -> List[Dict[str, Any]]:
         """
         Fetch all instruments for a currency with their latest market data.
         This provides consistent bond counts by using instruments as the base.
@@ -85,9 +79,6 @@ class AMXRepository:
             # Get latest market data for this instrument
             latest_data = self.get_latest_market_data_for_instrument(isin)
 
-            results.append({
-                "instrument": instrument.to_dict(),
-                "latest_market_data": latest_data
-            })
+            results.append({"instrument": instrument.to_dict(), "latest_market_data": latest_data})
 
         return results
