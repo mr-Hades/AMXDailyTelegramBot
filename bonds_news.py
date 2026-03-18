@@ -89,9 +89,7 @@ def fetch_amx_issuers() -> List[Tuple[str, str, str]]:
         return []
 
 
-def check_amx_listing(
-    company_name: str, amx_issuers: List[Tuple[str, str, str]]
-) -> Optional[str]:
+def check_amx_listing(company_name: str, amx_issuers: List[Tuple[str, str, str]]) -> Optional[str]:
     """Check if a company is listed on AMX. Returns ISIN if found."""
     target = _normalize_name(company_name)
     if not target:
@@ -305,9 +303,7 @@ def listen_for_callbacks() -> None:
     _process_callbacks(once=False)
 
 
-def _rebuild_active_tracker(
-    active: Dict[str, dict], dismissed: Set[str]
-) -> Tuple[str, List[List[Dict[str, str]]]]:
+def _rebuild_active_tracker(active: Dict[str, dict], dismissed: Set[str]) -> Tuple[str, List[List[Dict[str, str]]]]:
     """Rebuild the active tracker message from state data.
 
     Converts the active dict entries (minus dismissed) into
@@ -372,9 +368,7 @@ def _process_callbacks(once: bool = False) -> None:
                 # Only allow chat admins to dismiss
                 user_id = cb.get("from", {}).get("id")
                 if not user_id or not notifier.is_chat_admin(user_id):
-                    notifier.answer_callback_query(
-                        cb["id"], text="⛔ Only admins can remove companies"
-                    )
+                    notifier.answer_callback_query(cb["id"], text="⛔ Only admins can remove companies")
                     continue
 
                 # Reload state in case it changed between iterations
@@ -382,7 +376,7 @@ def _process_callbacks(once: bool = False) -> None:
                 dismissed: Set[str] = set(state.get("dismissed", []))
                 active: Dict[str, dict] = state.get("active", {})
 
-                decision_id = data[len(DISMISS_PREFIX):]
+                decision_id = data[len(DISMISS_PREFIX) :]
                 info = active.get(decision_id)
                 company = info["company_name"] if info else decision_id
                 date = info["date"] if info else "?"
@@ -394,9 +388,7 @@ def _process_callbacks(once: bool = False) -> None:
                 state["dismissed"] = sorted(dismissed)
                 save_state(state)
 
-                notifier.answer_callback_query(
-                    cb["id"], text=f"✅ Removed {company} ({date})"
-                )
+                notifier.answer_callback_query(cb["id"], text=f"✅ Removed {company} ({date})")
                 print(f"  Dismissed: {company} ({date}) [ID={decision_id}]")
 
                 # Edit the original message to remove the dismissed entry
@@ -404,12 +396,8 @@ def _process_callbacks(once: bool = False) -> None:
                 message_id = msg_obj.get("message_id")
                 msg_chat_id = str(msg_obj.get("chat", {}).get("id", ""))
                 if message_id:
-                    new_text, new_buttons = _rebuild_active_tracker(
-                        active, dismissed
-                    )
-                    notifier.edit_message_with_buttons(
-                        message_id, new_text, new_buttons, chat_id=msg_chat_id
-                    )
+                    new_text, new_buttons = _rebuild_active_tracker(active, dismissed)
+                    notifier.edit_message_with_buttons(message_id, new_text, new_buttons, chat_id=msg_chat_id)
 
             # Persist offset even if no dismiss happened
             if updates:

@@ -34,15 +34,16 @@ class BondReportFormatter:
         ]
         lines.append(f"🏆 <b>Top {currency} Bonds by Japanese Yield:</b>\n")
         lines.append("<pre>")
-        lines.append(f"{'Ticker':<8} {'Maturity':<12} {'Price':>7} {'Cpn%':>5} {'Yield%':>6}")
-        lines.append("-" * 45)
+        lines.append(f"{'Ticker':<8} {'Mat.':<12} {'Price':>7} {'Cpn%':>5} {'Yld%':>6} {'Cls':>3}")
+        lines.append("-" * 47)
 
         for bond in bonds[:top_n]:
             if bond.japanese_yield is not None:
+                lc = bond.list_class or "-"
                 lines.append(
                     f"{bond.ticker:<8} {bond.maturity_date:<12} "
                     f"{bond.ask_price:>7.2f} {bond.cpn_rate:>5.2f} "
-                    f"{bond.japanese_yield:>6.2f}"
+                    f"{bond.japanese_yield:>6.2f} {lc:>3}"
                 )
         lines.append("</pre>")
         lines.append(f"\n📈 Total <b>{currency}</b> bonds analyzed: {len(bonds)}")
@@ -60,5 +61,6 @@ class BondReportFormatter:
             "cpn_rate",
             "cpn_frequency",
             "japanese_yield",
+            "list_class",
         ]
         return df[display_columns].head(top_n).to_string()

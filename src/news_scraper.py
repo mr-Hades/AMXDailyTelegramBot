@@ -38,7 +38,7 @@ class CBAProspectusScraper:
     _COMPANY_PATTERNS = [
         # "... PROGRAM PROSPECTUS OF BONDS OF "COMPANY" TYPE"
         re.compile(
-            r'(?:PROSPECTUS|prospectus)\s+(?:OF\s+)?(?:BONDS\s+OF|for\s+(?:\w+\s+)*?(?:Bonds?\s+of))\s+'
+            r"(?:PROSPECTUS|prospectus)\s+(?:OF\s+)?(?:BONDS\s+OF|for\s+(?:\w+\s+)*?(?:Bonds?\s+of))\s+"
             r'["\u201c\u201d](.+?)["\u201c\u201d]',
             re.I | re.S,
         ),

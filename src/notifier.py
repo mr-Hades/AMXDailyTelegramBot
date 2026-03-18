@@ -96,9 +96,7 @@ class TelegramNotifier:
             print(f"Failed to get updates: {e}")
         return []
 
-    def answer_callback_query(
-        self, callback_query_id: str, text: str = ""
-    ) -> bool:
+    def answer_callback_query(self, callback_query_id: str, text: str = "") -> bool:
         """Acknowledge a callback query (dismiss the loading indicator)."""
         url = f"{self.api_url}/answerCallbackQuery"
         payload: Dict[str, Any] = {"callback_query_id": callback_query_id}

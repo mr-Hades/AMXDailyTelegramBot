@@ -134,6 +134,7 @@ class BondAnalyzer:
             cpn_rate=cpn_rate,
             cpn_frequency=instrument.get("cpn_frequency_en"),
             par_value=par_value,
+            list_class=self._parse_list_class(instrument.get("list_class")),
         )
 
         # Calculate Japanese yield
@@ -170,12 +171,22 @@ class BondAnalyzer:
             cpn_rate=cpn_rate,
             cpn_frequency=instrument.get("cpn_frequency_en"),
             par_value=par_value,
+            list_class=self._parse_list_class(instrument.get("list_class")),
         )
 
         # Calculate Japanese yield
         bond.japanese_yield = self.yield_calculator.calculate(bond)
 
         return bond
+
+    @staticmethod
+    def _parse_list_class(value: Any) -> Optional[str]:
+        """Extract list letter from list_class (e.g. 'ABond' -> 'A', 'BBond' -> 'B')."""
+        if not value or not isinstance(value, str):
+            return None
+        # list_class values are like 'ABond', 'BBond', 'GBond'
+        cleaned = value.replace("Bond", "").strip()
+        return cleaned if cleaned else value
 
     def _parse_par_value(self, value: Any) -> Optional[float]:
         """Parse par value to float."""

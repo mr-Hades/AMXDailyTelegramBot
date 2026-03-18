@@ -40,8 +40,7 @@ class ProspectusFormatter:
 
             if i + _BATCH_SIZE >= len(decisions):
                 lines.append(
-                    "⏳ <i>These companies are expected to place bonds soon. "
-                    "Monitoring AMX for listing.</i>"
+                    "⏳ <i>These companies are expected to place bonds soon. " "Monitoring AMX for listing.</i>"
                 )
 
             messages.append("\n".join(lines))

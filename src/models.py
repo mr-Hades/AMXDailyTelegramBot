@@ -19,3 +19,4 @@ class Bond:
     cpn_frequency: Optional[str] = None
     par_value: Optional[float] = None
     japanese_yield: Optional[float] = None
+    list_class: Optional[str] = None
