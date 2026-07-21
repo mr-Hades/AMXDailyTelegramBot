@@ -78,14 +78,20 @@ def main(send_telegram: bool = False, fetch_all: bool = False) -> Dict[str, List
             # Send separate message for each currency
             for currency in SUPPORTED_CURRENCIES:
                 bonds = all_bonds[currency]
-                if bonds:  # Only send if there are bonds
-                    message = formatter.format_for_telegram(bonds, currency=currency)
+                if not bonds:  # Only send if there are bonds
+                    print(f"\n⚠️ No {currency} bonds to report")
+                    continue
+
+                if currency == "AMD":
+                    messages = formatter.format_class_split_for_telegram(bonds, currency=currency)
+                else:
+                    messages = [formatter.format_for_telegram(bonds, currency=currency)]
+
+                for message in messages:
                     if notifier.send_message(message):
                         print(f"\n✅ {currency} report sent to Telegram successfully!")
                     else:
                         print(f"\n❌ Failed to send {currency} report to Telegram")
-                else:
-                    print(f"\n⚠️ No {currency} bonds to report")
         else:
             print("\n⚠️ Telegram credentials not configured (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)")
 
