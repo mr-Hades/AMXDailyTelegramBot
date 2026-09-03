@@ -81,14 +81,15 @@ class BondReportFormatter:
         ]
         lines.append(f"📊 <b>{currency} Holdings by Japanese Yield:</b>\n")
         lines.append("<pre>")
-        lines.append(f"{'Ticker':<8} {'Mat.':<12} {'Price':>7} {'Cpn%':>5} {'Yld%':>6}")
-        lines.append("-" * 44)
+        lines.append(f"{'Ticker':<8} {'Mat.':<12} {'Buy Px':>7} {'Price':>7} {'Cpn%':>5} {'Yld%':>6}")
+        lines.append("-" * 52)
 
         count = 0
         unmatched_tickers = []
         for bond in bonds:
             yld = bond.japanese_yield
             price = bond.ask_price
+            buy_price = bond.buy_price
             cpn = bond.cpn_rate or 0.0
 
             if yld is None and price is None:
@@ -99,6 +100,7 @@ class BondReportFormatter:
                     count += 1
                 continue
 
+            buy_price_str = f"{buy_price:>7.2f}" if buy_price is not None else "    N/A"
             price_str = f"{price:>7.2f}" if price is not None else "    N/A"
             cpn_str = f"{cpn:>5.2f}" if cpn is not None else "  N/A"
             yld_str = f"{yld:>6.2f}" if yld is not None else "   N/A"
@@ -107,7 +109,9 @@ class BondReportFormatter:
             if bond.is_unmatched:
                 unmatched_tickers.append(bond.ticker)
 
-            lines.append(f"{ticker:<8} {bond.maturity_date:<12} " f"{price_str} {cpn_str} " f"{yld_str}")
+            lines.append(
+                f"{ticker:<8} {bond.maturity_date:<12} " f"{buy_price_str} {price_str} {cpn_str} " f"{yld_str}"
+            )
             count += 1
 
         lines.append("</pre>")

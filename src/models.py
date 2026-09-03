@@ -14,9 +14,11 @@ class Bond:
     short_name: Optional[str] = None
     ask_price: Optional[float] = None
     bid_price: Optional[float] = None
+    buy_price: Optional[float] = None
     ask_yield: Optional[float] = None
     cpn_rate: Optional[float] = None
     cpn_frequency: Optional[str] = None
     par_value: Optional[float] = None
     japanese_yield: Optional[float] = None
     list_class: Optional[str] = None
+    is_unmatched: bool = False
